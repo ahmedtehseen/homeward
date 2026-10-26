@@ -1,0 +1,10 @@
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore
+signing.properties
+.DS_Store
+PersonalBackup.apk
+personal-backup
+walkthrough/

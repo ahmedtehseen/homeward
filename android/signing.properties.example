@@ -1,0 +1,6 @@
+# Copy to signing.properties (ignored by Git), then use a private keystore.
+# Keep the keystore and passwords out of source archives and version control.
+storeFile=/absolute/private/path/personal-backup-release.jks
+storePassword=replace-locally
+keyAlias=personal-backup
+keyPassword=replace-locally
