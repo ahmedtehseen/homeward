@@ -297,6 +297,7 @@ private fun Step(number: String, title: String, subtitle: String) {
 @Composable
 private fun LibraryScreen(vm: BackupViewModel) {
     val filter by vm.filter.collectAsStateWithLifecycle()
+    val totals by vm.totals.collectAsStateWithLifecycle()
     val missingFailures by vm.missingFailures.collectAsStateWithLifecycle()
     val media = vm.media.collectAsLazyPagingItems()
     var confirmMissingDismissal by rememberSaveable { mutableStateOf(false) }
@@ -310,15 +311,15 @@ private fun LibraryScreen(vm: BackupViewModel) {
                 FilterChip(selected = filter == value, onClick = { vm.filter.value = value }, label = { Text(label) })
             }
         }
-        if (filter == "failed") Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (filter == "failed" && totals.failed > 0) Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { vm.retry() }) { Text("Retry available items") }
             if (missingFailures > 0) TextButton(onClick = { confirmMissingDismissal = true }) { Text("Clear $missingFailures unavailable") }
         }
         if (media.itemCount == 0) Box(Modifier.fillMaxWidth().weight(1f).padding(32.dp), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Outlined.PhotoLibrary, null, tint = Muted, modifier = Modifier.size(40.dp))
-                Text("No items here yet", fontWeight = FontWeight.Medium)
-                Text("Pair your Mac and allow library access to scan. Items appear as they are discovered.", color = Muted, fontSize = 13.sp)
+                Text(if (filter == "failed") "No failed items" else "No items here yet", fontWeight = FontWeight.Medium)
+                Text(if (filter == "failed") "Unavailable items you clear will no longer count as failures." else "Pair your Mac and allow library access to scan. Items appear as they are discovered.", color = Muted, fontSize = 13.sp)
             }
         } else LazyColumn(contentPadding = PaddingValues(horizontal = 24.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             items(media.itemCount, key = media.itemKey { it.key }) { index -> media[index]?.let { item -> MediaRow(item) } }
