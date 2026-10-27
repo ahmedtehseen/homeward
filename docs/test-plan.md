@@ -40,3 +40,5 @@ Run an interruption in each phase: hashing, chunk upload, server verification, f
 ## Release gate
 
 Enable phone cleanup only after the automated integrity/recovery checks pass. First-use device testing should use disposable copies and keep cleanup separate until verified. Any omitted hardware tests must remain explicitly unverified in the release notes; compile success alone is not an end-to-end transfer test.
+
+**Phase 1 result — passed October 28, 2026.** The automated integrity and recovery checks and the intended phone/Mac acceptance workflows were completed successfully. The controlled 100 GB and 100,000-item performance benchmarks remain deferred to a later scale-validation phase.

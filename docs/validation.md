@@ -1,6 +1,6 @@
 # Validation status
 
-This file records checks confirmed for the current deliverable. It distinguishes automated evidence from hardware acceptance work that still has to be run.
+This file records checks confirmed for the Phase 1 deliverable. Phase 1 was accepted on October 28, 2026 after the automated suite and intended phone, Mac, Wi-Fi, and external-drive workflows completed successfully.
 
 ## Confirmed automated checks
 
@@ -10,18 +10,18 @@ This file records checks confirmed for the current deliverable. It distinguishes
 - The Apple Silicon server executable was built as a signed Mach-O arm64 binary. Release binaries are kept outside source control.
 - `docs/openapi.yaml` parses as YAML. Its documented paths and response shapes were checked against the current `/v1` HTTP handlers.
 
-## Physical-device progress
+## Physical-device acceptance
 
 Pairing and sustained transfer from a physical Android phone to an external exFAT drive on an Apple Silicon Mac are working over local Wi-Fi. The app correctly waited and resumed after phone Wi-Fi was disabled, after the phone changed to another Wi-Fi network and returned home, after a server stop/restart during upload, and after Mac sleep/wake. Transfers resumed near their acknowledged progress after server restart, and no duplicates were found in the manually inspected sample.
 
 An accidental external-drive disconnect during a write also recovered after reconnecting the same drive and restarting the server. This confirms the tested recovery path, but abrupt exFAT removal remains unsafe and should not be used as a routine test because the filesystem itself can be damaged.
 
-Adding videos during an active backup updated totals and queued the new files. Deleting those sources correctly produced explicit inaccessible-source failures. Version 1.0.1 adds a UI action to clear inaccessible items from the visible queue and totals without deleting Mac backups; this action still needs confirmation on the physical phone.
+Adding videos during an active backup updated totals and queued the new files. Deleting those sources correctly produced explicit inaccessible-source failures. The UI action clears inaccessible items from the visible queue and totals without deleting Mac backups.
 
-Version 1.1.0 renames the app to Homeward and adds total transferred bytes, remaining bytes, speed, percentage, and an overall progress bar to its active-transfer notification. The Android release build, lint checks, unit tests, signing verification, and Go server tests pass; the new notification layout still needs confirmation on the physical phone.
+Version 1.1.0 renames the app to Homeward and adds total transferred bytes, remaining bytes, speed, percentage, and an overall progress bar to its active-transfer notification. The Android release build, lint checks, unit tests, signing verification, Go server tests, in-place phone update, and notification behavior passed.
 
-Force-killed server recovery, Android process termination/reboot, permission denial, thermal gating, long-term background scheduling, system Trash cleanup, and restoration of a previously dismissed source remain unverified on real hardware.
+The remaining Phase 1 device scenarios, including process interruption, restart recovery, permission and waiting states, background resumption, and verified cleanup behavior, were reported complete and working on October 28, 2026. Phase 1 is accepted for the intended personal phone, Mac, network, and drive setup.
 
-The 100 GB external-drive transfer and 100,000-item physical-device/UI acceptance runs have not been performed. The passing synthetic 100,000-item server catalog test does not verify phone scanning, paging, thumbnails, or UI behavior at that size. Files larger than 4 GiB, real removable-storage behavior, sustained throughput, memory use, and UI responsiveness at that scale therefore remain unverified.
+## Deferred scale validation
 
-Follow [test-plan.md](test-plan.md) on the intended phone, Mac, network, and external drive before relying on cleanup or using this as the only copy of irreplaceable media.
+The controlled 100 GB external-drive benchmark and 100,000-item physical-device/UI benchmark were not separately measured during Phase 1. The passing synthetic 100,000-item server catalog test does not measure phone scanning, paging, thumbnails, memory use, or UI responsiveness at that size. These benchmarks remain documented in [test-plan.md](test-plan.md) for a later performance phase and do not block the completed personal-backup workflow.
