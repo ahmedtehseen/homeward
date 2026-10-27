@@ -136,7 +136,7 @@ func createCertificate(root string, c Config, replace bool) error {
 		return e
 	}
 	serial, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	tmpl := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "Personal Media Backup " + c.Library}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().AddDate(10, 0, 0), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, DNSNames: []string{"localhost"}}
+	tmpl := &x509.Certificate{SerialNumber: serial, Subject: pkix.Name{CommonName: "Homeward " + c.Library}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().AddDate(10, 0, 0), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, DNSNames: []string{"localhost"}}
 	der, e := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &priv.PublicKey, priv)
 	if e != nil {
 		return e
@@ -289,7 +289,7 @@ func start(root string, c Config) error {
 	api := &API{store: s, verifySlots: make(chan struct{}, 2)}
 	// TLS sessions are pinned by the phone. No certificate-authority or internet dependency.
 	srv := &http.Server{Addr: fmt.Sprintf(":%d", c.Port), Handler: api.Handler(), ReadHeaderTimeout: 15 * time.Second, ReadTimeout: 5 * time.Minute, IdleTimeout: 90 * time.Second, MaxHeaderBytes: 16 << 10, TLSConfig: &tls.Config{MinVersion: tls.VersionTLS13}}
-	mdns, e := zeroconf.Register("Personal Backup "+c.Library[:8], "_pbackup._tcp", "local.", c.Port, []string{"library=" + c.Library, "protocol=1"}, nil)
+	mdns, e := zeroconf.Register("Homeward "+c.Library[:8], "_pbackup._tcp", "local.", c.Port, []string{"library=" + c.Library, "protocol=1"}, nil)
 	if e != nil {
 		log.Printf("Discovery unavailable; use the Mac IP address: %v", e)
 	} else {

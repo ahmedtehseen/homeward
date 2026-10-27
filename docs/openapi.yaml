@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Personal Backup local API
+  title: Homeward local API
   version: 1.0.0
   description: |
     HTTPS on the local network. Clients pin the SHA-256 digest of the server's DER

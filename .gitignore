@@ -5,6 +5,6 @@ local.properties
 *.keystore
 signing.properties
 .DS_Store
-PersonalBackup.apk
+*.apk
 personal-backup
 walkthrough/

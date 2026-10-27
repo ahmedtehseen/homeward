@@ -26,6 +26,7 @@ import coil.ImageLoaderFactory
 import coil.decode.VideoFrameDecoder
 import coil.memory.MemoryCache
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.combine
 import java.util.concurrent.TimeUnit
 
 class BackupApp : Application(), ImageLoaderFactory, Configuration.Provider {
@@ -87,16 +88,37 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 class TransferJob : JobService() {
     private var work: Job? = null
     override fun onStartJob(params: JobParameters): Boolean {
-        fun notification(message: String): Notification {
+        fun notification(state: SyncView, totals: Totals? = null): Notification {
             val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-            return Notification.Builder(this, "transfers").setSmallIcon(R.drawable.ic_backup).setContentTitle("Personal Backup")
-                .setContentText(message).setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true).build()
+            val total = totals?.bytes ?: 0L
+            val completed = totals?.let { (it.backedBytes + it.transferred).coerceIn(0, it.bytes) } ?: 0L
+            val remaining = (total - completed).coerceAtLeast(0)
+            val percent = if (total > 0) (completed * 100 / total).toInt() else 0
+            val summary = when {
+                total <= 0L -> state.message
+                state.speed > 0L -> "${bytes(remaining)} left · ${bytes(state.speed)}/s"
+                else -> "${bytes(remaining)} left · ${state.message}"
+            }
+            val activeNames = state.active.values.joinToString(", ") { it.name }
+            val details = buildString {
+                append(state.message)
+                if (total > 0L) append("\n${bytes(completed)} of ${bytes(total)} transferred")
+                if (activeNames.isNotEmpty()) append("\nUploading: $activeNames")
+            }
+            return Notification.Builder(this, "transfers")
+                .setSmallIcon(R.drawable.ic_backup)
+                .setContentTitle(if (total > 0L) "Homeward · $percent%" else "Homeward")
+                .setContentText(summary)
+                .setStyle(Notification.BigTextStyle().bigText(details))
+                .setProgress(1000, if (total > 0L) (completed * 1000 / total).toInt() else 0, total <= 0L)
+                .setCategory(Notification.CATEGORY_PROGRESS)
+                .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true).build()
         }
-        setNotification(params, 4001, notification("Preparing transfer · tap to pause"), JOB_END_NOTIFICATION_POLICY_REMOVE)
+        setNotification(params, 4001, notification(SyncView(message = "Preparing transfer · tap to pause")), JOB_END_NOTIFICATION_POLICY_REMOVE)
         work = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             val notifier = launch {
-                SyncLive.state.collect { state ->
-                    getSystemService(NotificationManager::class.java).notify(4001, notification(state.message + if (state.active.isNotEmpty()) " · ${state.active.size} active" else ""))
+                combine(SyncLive.state, BackupDatabase.get(applicationContext).media().totals()) { state, totals -> state to totals }.collect { (state, totals) ->
+                    getSystemService(NotificationManager::class.java).notify(4001, notification(state, totals))
                 }
             }
             try { SyncEngine(applicationContext).run(true) }

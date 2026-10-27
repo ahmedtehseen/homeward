@@ -1,6 +1,6 @@
 # Architecture and integrity boundaries
 
-Personal Backup has two components: an Android client (Kotlin, Compose, Room, OkHttp) and a Mac CLI/server (Go, SQLite, ordinary files). The data path is phone MediaStore → pinned HTTPS on the local network → external-drive staging → verified original. No remote service participates.
+Homeward has two components: an Android client (Kotlin, Compose, Room, OkHttp) and a Mac CLI/server (Go, SQLite, ordinary files). The data path is phone MediaStore → pinned HTTPS on the local network → external-drive staging → verified original. No remote service participates.
 
 ## Persistent state
 

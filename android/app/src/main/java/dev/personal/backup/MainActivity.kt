@@ -203,7 +203,7 @@ fun BackupScreen(vm: BackupViewModel = viewModel()) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Backup, null, tint = Pine, modifier = Modifier.size(26.dp)); Spacer(Modifier.width(10.dp))
-                Text("Personal Backup", fontWeight = FontWeight.SemiBold, fontSize = 19.sp, modifier = Modifier.weight(1f))
+                Text("Homeward", fontWeight = FontWeight.SemiBold, fontSize = 19.sp, modifier = Modifier.weight(1f))
                 if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             }
             if (error != null) Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(12.dp)) {
@@ -376,7 +376,7 @@ private fun SettingsScreen(vm: BackupViewModel, pairing: Pairing?, busy: Boolean
         OutlinedButton(onClick = onPair, modifier = Modifier.fillMaxWidth(), enabled = !busy) { Text(if (pairing == null) "Pair Mac" else "Pair again or change Mac") }
         TextButton(onClick = onPermissions) { Text("Manage photo and network access") }
         Text("The Mac must be awake with the server running and the drive attached. Automatic work follows Android’s scheduling; open the app after a force-stop. Sync now starts a longer transfer session.", color = Muted, fontSize = 12.sp, lineHeight = 19.sp)
-        Text("Personal Backup 1.0.1 · Android → Mac", fontSize = 11.sp, color = Muted)
+        Text("Homeward 1.1.0 · Android → Mac", fontSize = 11.sp, color = Muted)
     }
 }
 @Composable

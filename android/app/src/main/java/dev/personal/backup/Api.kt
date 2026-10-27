@@ -105,7 +105,7 @@ class Api(private val context: Context, val pairing: Pairing, private val networ
                     override fun onStopDiscoveryFailed(type: String, code: Int) = Unit
                     override fun onServiceLost(info: NsdServiceInfo) = Unit
                     override fun onServiceFound(info: NsdServiceInfo) {
-                        if (!info.serviceName.startsWith("Personal Backup") || !resolving.compareAndSet(false, true)) return
+                        if ((!info.serviceName.startsWith("Homeward") && !info.serviceName.startsWith("Personal Backup")) || !resolving.compareAndSet(false, true)) return
                         @Suppress("DEPRECATION")
                         nsd.resolveService(info, object : NsdManager.ResolveListener {
                             override fun onResolveFailed(info: NsdServiceInfo, code: Int) { resolving.set(false) }

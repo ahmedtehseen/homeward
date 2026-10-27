@@ -1,4 +1,6 @@
-# Personal Backup
+# Homeward
+
+**Your memories, back home.**
 
 Copy original photos and videos from an Android phone to an external drive attached to your Mac over local Wi-Fi. Transfers resume after interruptions. Files become backed up only after the Mac verifies their full SHA-256 hash.
 
@@ -57,8 +59,8 @@ The pairing code expires in ten minutes and can be used once. Generate another i
 
 ## Install and pair the phone
 
-1. Copy `PersonalBackup.apk` to the phone using your preferred file-transfer method, then open it. Temporarily allow installation from that file manager/browser if Android requests it. Future updates must use the same app signing key.
-2. Open **Personal Backup**. Grant photos **and** videos access to all media for a full-library backup, original-media/location access to preserve unredacted originals, and local-network access when Android requests it. Notifications make manual transfer progress visible. Camera permission is only needed to scan the pairing QR code.
+1. Copy `Homeward.apk` to the phone using your preferred file-transfer method, then open it. Temporarily allow installation from that file manager/browser if Android requests it. Future updates must use the same app signing key.
+2. Open **Homeward**. Grant photos **and** videos access to all media for a full-library backup, original-media/location access to preserve unredacted originals, and local-network access when Android requests it. Notifications make manual transfer progress visible. Camera permission is only needed to scan the pairing QR code.
 3. Scan the Mac's pairing QR code, or paste the complete pairing JSON shown below it. The JSON includes the Mac address, library identity, certificate fingerprint, and temporary secret.
 4. Choose **Sync now**. Check the progress and unresolved-item messages. Folder exclusions and charging-only mode can reduce the first transfer's scope.
 
