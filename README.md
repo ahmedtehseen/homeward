@@ -17,64 +17,125 @@ No hosted cloud, account, internet connection, Docker, or subscription is needed
 - External-volume identity checks, storage reservations, atomic publication, and recovery manifests
 - Explicit waiting and failure states for network, battery, thermal, storage, permission, and source-file changes
 
-## What you need
+## Installation
 
-- Android 14 or later; the app targets Android 17.
-- An Apple Silicon Mac and a writable external drive using APFS, HFS+, or exFAT. FAT32 cannot hold large videos and is rejected. **Do not format an existing drive to try this app.** Choose a suitable existing volume or back it up separately before any filesystem changes.
-- Phone and Mac on the same Wi-Fi network, with device-to-device traffic allowed. Guest networks often block this.
-- Enough drive space for the library plus a 5 GiB reserve. The Mac must remain awake and the drive mounted while syncing.
+### Before you begin
 
-Start with a small folder and check the copied files before attempting your full library. Hardware acceptance tests and their status are in [docs/test-plan.md](docs/test-plan.md).
+You need:
 
-## Start the Mac server
+- An Android phone running Android 14 or later.
+- An Apple Silicon Mac.
+- A writable external drive formatted as APFS, HFS+, or exFAT. FAT32 is not supported because it cannot hold large videos.
+- At least 5 GiB more free space than the media you want to back up.
+- The phone and Mac connected to the same Wi-Fi network. Guest Wi-Fi often blocks devices from seeing each other.
+- The `personal-backup` Mac executable and `Homeward.apk` Android installer.
 
-Keep the `personal-backup` executable in a stable folder. Open Terminal in that folder. Replace `YourDrive` in these commands with your drive's actual name:
+> **Keep existing drive data safe:** formatting is not required. If you decide to reformat a drive for another reason, copy its existing files somewhere safe first.
+
+The examples below use a drive named `YourDrive`. Replace it with the name shown for your drive in Finder. Use the same library path every time:
+
+```text
+/Volumes/YourDrive/PersonalBackup
+```
+
+### 1. Initialize the external drive library
+
+Open Terminal in the folder containing `personal-backup`, then make it executable:
 
 ```sh
 chmod +x ./personal-backup
+```
+
+Initialize the backup library:
+
+```sh
 ./personal-backup init --root "/Volumes/YourDrive/PersonalBackup"
+```
+
+Run `init` **once only**. It creates Homeward's catalog, certificate, and recovery data on the external drive. For later sessions, start at step 2.
+
+### 2. Start the Mac server
+
+In the same Terminal window, run:
+
+```sh
 ./personal-backup start --root "/Volumes/YourDrive/PersonalBackup"
 ```
 
-Run `init` once only. It creates the library, its certificate, and SQLite catalog on that drive. `start` stays in the foreground; leave this Terminal open. Allow incoming local connections if macOS prompts. Default HTTPS port: **8787**. Do not configure router port forwarding.
+Leave this Terminal window open while Homeward is syncing. If macOS asks whether to allow incoming connections, choose **Allow**. The server uses local HTTPS port `8787`; router port forwarding is not needed.
 
-In a second Terminal, from the same executable folder:
+You should see a message similar to:
+
+```text
+Listening on HTTPS port 8787; library …
+```
+
+### 3. Display the pairing QR code
+
+Open a **second Terminal window** in the folder containing `personal-backup`, then run:
 
 ```sh
 ./personal-backup pair --root "/Volumes/YourDrive/PersonalBackup"
+```
+
+Keep this window visible for the phone. The QR code expires after ten minutes and works once. Run the command again if it expires.
+
+To confirm the drive and server are available at any time:
+
+```sh
 ./personal-backup status --root "/Volumes/YourDrive/PersonalBackup"
 ```
 
-If an older build reports a TLS handshake failure during pairing, stop the
-server, refresh its local certificate, restart it, and generate a new QR code:
+### 4. Install Homeward on the phone
 
-```bash
-./personal-backup refresh-certificate --root "/Volumes/YourDrive/PersonalBackup"
-```
+1. Copy `Homeward.apk` to the phone and open it.
+2. If Android asks, temporarily allow installation from the browser or file manager you used.
+3. Open **Homeward** after installation.
 
-Refreshing the certificate requires pairing the phone again. It does not alter
-the media library or catalog.
+Installing a later Homeward APK over the current app preserves its queue and pairing when it uses the same package name and signing key.
 
-The pairing code expires in ten minutes and can be used once. Generate another if necessary. Keep the code private until it expires. `status` checks the selected library and whether a process is listening on the configured port; the phone validates the server's identity when connecting.
+### 5. Grant access and pair
 
-## Install and pair the phone
+When Android asks, allow:
 
-1. Copy `Homeward.apk` to the phone using your preferred file-transfer method, then open it. Temporarily allow installation from that file manager/browser if Android requests it. Future updates must use the same app signing key.
-2. Open **Homeward**. Grant photos **and** videos access to all media for a full-library backup, original-media/location access to preserve unredacted originals, and local-network access when Android requests it. Notifications make manual transfer progress visible. Camera permission is only needed to scan the pairing QR code.
-3. Scan the Mac's pairing QR code, or paste the complete pairing JSON shown below it. The JSON includes the Mac address, library identity, certificate fingerprint, and temporary secret.
-4. Choose **Sync now**. Check the progress and unresolved-item messages. Folder exclusions and charging-only mode can reduce the first transfer's scope.
+- **All photos and videos** so Homeward can discover the complete accessible library.
+- **Original media/location access** so original bytes and embedded metadata remain available.
+- **Local network access** so the phone can reach the Mac without using the internet.
+- **Notifications** so transfer progress remains visible.
+- **Camera access** if you want to scan the QR code.
 
-Granting access only to selected photos backs up only those accessible items. Cloud-only media and private app folders are not scanned. Download originals into the phone's accessible media library first if you want them included. Keep the originals permission granted; the app must not silently back up redacted or transcoded substitutes.
+In Homeward, choose **Scan Mac code** and scan the QR code from step 3. You can also paste the complete pairing text shown beneath the code.
 
-### If discovery does not work
+If Android grants access only to selected photos, Homeward can back up only those items. Cloud-only media and private app folders are outside Phase 1. Download cloud-only originals into the phone's accessible media library before syncing them.
 
-Use your Mac's Wi-Fi IP address from System Settings → Wi-Fi → Details → TCP/IP. Generate pairing data containing that address:
+### 6. Start the first backup
+
+Choose **Sync now** in Homeward. Keep the Mac awake, the server running, and the external drive connected. The first scan can take time for a large library.
+
+The app shows discovered media, verified backups, remaining bytes, speed, active files, and failures. An upload is counted as backed up only after the Mac verifies the completed file.
+
+Start with a small test selection if this is your first setup. Open several completed files from `PersonalBackup/originals` on the Mac before expanding to the full library.
+
+### Connection help
+
+If Homeward cannot discover the Mac automatically:
+
+1. On the Mac, open **System Settings → Wi-Fi → Details → TCP/IP** and note the Wi-Fi IP address.
+2. Generate a new pairing code using that address:
 
 ```sh
 ./personal-backup pair --root "/Volumes/YourDrive/PersonalBackup" --host 192.168.1.20
 ```
 
-Use your actual address. Once paired, automatic local discovery searches for the same library; the app also allows entering an updated HTTPS server address manually. Certificate pinning remains required after an address change. Check local-network permissions, the Mac firewall, and guest-network isolation if the connection still fails. Wi-Fi does not need internet access.
+Replace `192.168.1.20` with the Mac's actual address. Check Android's local-network permission, the macOS firewall, and Wi-Fi device isolation if it still cannot connect. The Wi-Fi network does not need internet access.
+
+If an older build reports a TLS handshake failure during pairing, stop the server with Control-C and refresh its local certificate:
+
+```sh
+./personal-backup refresh-certificate --root "/Volumes/YourDrive/PersonalBackup"
+```
+
+Restart the server, generate a fresh QR code, and pair again. Refreshing the certificate does not change the media library or catalog.
 
 ## Everyday use
 
