@@ -6,7 +6,7 @@ Copy original photos and videos from an Android phone to an external drive attac
 
 No hosted cloud, account, internet connection, Docker, or subscription is needed to run it. A one-time pairing code authorizes the phone and pins the Mac's HTTPS certificate. Building from source requires downloading dependencies.
 
-> **Project status:** Phase 1 complete as of October 28, 2026. The local Android-to-Mac backup, resumable transfer, integrity verification, interruption recovery, progress reporting, and verified cleanup workflows passed automated checks and physical-device acceptance testing. Larger controlled scale benchmarks remain future validation work.
+> **Project status:** Phase 1 complete as of October 28, 2026. The local Android-to-Mac backup, resumable transfer, integrity verification, interruption recovery, progress reporting, and verified cleanup workflows passed automated checks and physical-device acceptance testing with approximately 14,000 items and 60 GB of media, including large videos. Larger controlled stress benchmarks remain future validation work.
 
 ## Engineering focus
 
