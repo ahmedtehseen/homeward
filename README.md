@@ -4,7 +4,7 @@ Copy original photos and videos from an Android phone to an external drive attac
 
 No hosted cloud, account, internet connection, Docker, or subscription is needed to run it. A one-time pairing code authorizes the phone and pins the Mac's HTTPS certificate. Building from source requires downloading dependencies.
 
-> **Project status:** Active development and hardware testing. Pairing and sustained phone-to-Mac transfers are working on a physical Android device over local Wi-Fi. Interruption recovery, large-library behavior, and verified cleanup are still being exercised before the app should be trusted as the only backup path.
+> **Project status:** Active development and hardware testing. Pairing, sustained transfers, Wi-Fi loss/network switching, server restart, Mac sleep, and external-drive reconnect recovery are working on physical hardware. Process/phone termination, large-library behavior, and verified cleanup still need acceptance testing before the app should be trusted as the only backup path.
 
 ## Engineering focus
 

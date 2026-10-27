@@ -67,6 +67,7 @@ class Library(private val context: Context) {
                             val excluded = settings.excluded(item.folder)
                             when {
                                 excluded -> item.copy(state = "excluded")
+                                old?.state == "dismissed" -> item
                                 old != null && old.version == item.version && old.state != "excluded" -> old.copy(present = true, seen = scanTime)
                                 item.size <= 0 -> item.copy(state = "failed", error = "Empty or unfinished media file")
                                 else -> item

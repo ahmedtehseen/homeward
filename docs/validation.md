@@ -12,9 +12,13 @@ This file records checks confirmed for the current deliverable. It distinguishes
 
 ## Physical-device progress
 
-Pairing and sustained transfer from a physical Android phone to an external exFAT drive on an Apple Silicon Mac are working over local Wi-Fi. This is an active test run rather than completed acceptance evidence.
+Pairing and sustained transfer from a physical Android phone to an external exFAT drive on an Apple Silicon Mac are working over local Wi-Fi. The app correctly waited and resumed after phone Wi-Fi was disabled, after the phone changed to another Wi-Fi network and returned home, after a server stop/restart during upload, and after Mac sleep/wake. Transfers resumed near their acknowledged progress after server restart, and no duplicates were found in the manually inspected sample.
 
-The external-drive removal, sleep/restart, Wi-Fi interruption, process termination, Android reboot, permission-denial, thermal, background scheduling, and system Trash flows remain unverified on real hardware.
+An accidental external-drive disconnect during a write also recovered after reconnecting the same drive and restarting the server. This confirms the tested recovery path, but abrupt exFAT removal remains unsafe and should not be used as a routine test because the filesystem itself can be damaged.
+
+Adding videos during an active backup updated totals and queued the new files. Deleting those sources correctly produced explicit inaccessible-source failures. Version 1.0.1 adds a UI action to clear inaccessible items from the visible queue and totals without deleting Mac backups; this action still needs confirmation on the physical phone.
+
+Force-killed server recovery, Android process termination/reboot, permission denial, thermal gating, long-term background scheduling, system Trash cleanup, and restoration of a previously dismissed source remain unverified on real hardware.
 
 The 100 GB external-drive transfer and 100,000-item physical-device/UI acceptance runs have not been performed. The passing synthetic 100,000-item server catalog test does not verify phone scanning, paging, thumbnails, or UI behavior at that size. Files larger than 4 GiB, real removable-storage behavior, sustained throughput, memory use, and UI responsiveness at that scale therefore remain unverified.
 

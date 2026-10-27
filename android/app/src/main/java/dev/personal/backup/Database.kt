@@ -23,14 +23,16 @@ interface MediaDao {
     @Upsert suspend fun put(items: List<Media>)
     @Query("SELECT * FROM media WHERE present=1 AND state IN ('pending','hashing','uploading','verifying') AND nextAttempt<=:now ORDER BY taken DESC, `key` LIMIT :limit")
     suspend fun queue(now: Long, limit: Int = 2): List<Media>
-    @Query("SELECT * FROM media WHERE (:filter='all' OR state=:filter OR (:filter='pending' AND state IN ('hashing','pending'))) AND state!='excluded' ORDER BY taken DESC, `key`")
+    @Query("SELECT * FROM media WHERE (:filter='all' OR state=:filter OR (:filter='pending' AND state IN ('hashing','pending'))) AND state NOT IN ('excluded','dismissed') ORDER BY taken DESC, `key`")
     fun page(filter: String): PagingSource<Int, Media>
-    @Query("SELECT COUNT(*) AS items, COALESCE(SUM(size),0) AS bytes, COALESCE(SUM(CASE WHEN state='backed_up' THEN 1 ELSE 0 END),0) AS backed, COALESCE(SUM(CASE WHEN state='backed_up' THEN size ELSE 0 END),0) AS backedBytes, COALESCE(SUM(CASE WHEN state!='backed_up' THEN offset ELSE 0 END),0) AS transferred, COALESCE(SUM(CASE WHEN state='failed' THEN 1 ELSE 0 END),0) AS failed FROM media WHERE state!='excluded'")
+    @Query("SELECT COUNT(*) AS items, COALESCE(SUM(size),0) AS bytes, COALESCE(SUM(CASE WHEN state='backed_up' THEN 1 ELSE 0 END),0) AS backed, COALESCE(SUM(CASE WHEN state='backed_up' THEN size ELSE 0 END),0) AS backedBytes, COALESCE(SUM(CASE WHEN state!='backed_up' THEN offset ELSE 0 END),0) AS transferred, COALESCE(SUM(CASE WHEN state='failed' THEN 1 ELSE 0 END),0) AS failed FROM media WHERE state NOT IN ('excluded','dismissed')")
     fun totals(): Flow<Totals>
+    @Query("SELECT COUNT(*) FROM media WHERE state='failed' AND present=0") fun missingFailures(): Flow<Long>
+    @Query("UPDATE media SET state='dismissed', error='', attempts=0, nextAttempt=0 WHERE state='failed' AND present=0") suspend fun dismissMissingFailures(): Int
     @Query("UPDATE media SET state='pending', error='', attempts=0, nextAttempt=0 WHERE state='failed' AND present=1") suspend fun retryFailures()
-    @Query("UPDATE media SET present=0, state=CASE WHEN state='backed_up' THEN state ELSE 'failed' END, error=CASE WHEN state='backed_up' THEN '' ELSE 'Source no longer accessible' END WHERE seen<:scan AND uri LIKE :volumePattern")
+    @Query("UPDATE media SET present=0, state=CASE WHEN state IN ('backed_up','dismissed') THEN state ELSE 'failed' END, error=CASE WHEN state IN ('backed_up','dismissed') THEN '' ELSE 'Source no longer accessible' END WHERE seen<:scan AND uri LIKE :volumePattern")
     suspend fun reconcile(scan: Long, volumePattern: String)
-    @Query("UPDATE media SET state=CASE WHEN present=1 THEN 'pending' ELSE 'failed' END, error=CASE WHEN present=1 THEN '' ELSE 'Source is no longer on phone; previous library retains its backup' END, library='', hash='', hashState='', hashOffset=0, offset=0, attempts=0, nextAttempt=0 WHERE state!='excluded'") suspend fun resetLibrary()
+    @Query("UPDATE media SET state=CASE WHEN present=1 THEN 'pending' ELSE 'failed' END, error=CASE WHEN present=1 THEN '' ELSE 'Source is no longer on phone; previous library retains its backup' END, library='', hash='', hashState='', hashOffset=0, offset=0, attempts=0, nextAttempt=0 WHERE state NOT IN ('excluded','dismissed')") suspend fun resetLibrary()
     @Query("UPDATE media SET present=0 WHERE `key` IN (:keys)") suspend fun markRemoved(keys: List<String>)
     @Query("SELECT * FROM media WHERE state='backed_up' AND present=1 AND library=:library ORDER BY taken ASC LIMIT 100")
     suspend fun cleanupCandidates(library: String): List<Media>

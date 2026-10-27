@@ -79,6 +79,7 @@ class BackupViewModel(app: Application) : AndroidViewModel(app) {
     val settings = Settings(app)
     private val dao = BackupDatabase.get(app).media()
     val totals = dao.totals().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Totals(0, 0, 0, 0, 0, 0))
+    val missingFailures = dao.missingFailures().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     val filter = MutableStateFlow("all")
     val media = filter.flatMapLatest { f -> Pager(PagingConfig(pageSize = 50, prefetchDistance = 15, maxSize = 200, enablePlaceholders = false)) { dao.page(f) }.flow }.cachedIn(viewModelScope)
     val pairing = MutableStateFlow(settings.pairing())
@@ -118,6 +119,10 @@ class BackupViewModel(app: Application) : AndroidViewModel(app) {
         finally { api.close() }
     }
     fun retry() = task { dao.retryFailures(); Schedule.soon(getApplication()) }
+    fun dismissMissingFailures() = task {
+        val count = dao.dismissMissingFailures()
+        SyncLive.state.update { it.copy(message = "$count unavailable ${if (count == 1) "item" else "items"} cleared from this phone’s backup list") }
+    }
     fun cleanupCandidates() = task {
         val library = pairing.value?.library ?: error("Pair with your Mac first")
         candidates.value = dao.cleanupCandidates(library)
@@ -292,7 +297,9 @@ private fun Step(number: String, title: String, subtitle: String) {
 @Composable
 private fun LibraryScreen(vm: BackupViewModel) {
     val filter by vm.filter.collectAsStateWithLifecycle()
+    val missingFailures by vm.missingFailures.collectAsStateWithLifecycle()
     val media = vm.media.collectAsLazyPagingItems()
+    var confirmMissingDismissal by rememberSaveable { mutableStateOf(false) }
     Column {
         Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Your library", fontSize = 28.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
@@ -303,7 +310,10 @@ private fun LibraryScreen(vm: BackupViewModel) {
                 FilterChip(selected = filter == value, onClick = { vm.filter.value = value }, label = { Text(label) })
             }
         }
-        if (filter == "failed") TextButton(onClick = { vm.retry() }, modifier = Modifier.padding(horizontal = 16.dp)) { Text("Retry failed items") }
+        if (filter == "failed") Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { vm.retry() }) { Text("Retry available items") }
+            if (missingFailures > 0) TextButton(onClick = { confirmMissingDismissal = true }) { Text("Clear $missingFailures unavailable") }
+        }
         if (media.itemCount == 0) Box(Modifier.fillMaxWidth().weight(1f).padding(32.dp), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Outlined.PhotoLibrary, null, tint = Muted, modifier = Modifier.size(40.dp))
@@ -314,6 +324,13 @@ private fun LibraryScreen(vm: BackupViewModel) {
             items(media.itemCount, key = media.itemKey { it.key }) { index -> media[index]?.let { item -> MediaRow(item) } }
         }
     }
+    if (confirmMissingDismissal) AlertDialog(
+        onDismissRequest = { confirmMissingDismissal = false },
+        title = { Text("Clear unavailable items?") },
+        text = { Text("These files are no longer accessible on this phone. Clearing them removes the warnings and adjusts the backup totals. It does not delete anything from your Mac. If a file returns to the phone’s media library, a later scan can add it again.") },
+        confirmButton = { TextButton(onClick = { confirmMissingDismissal = false; vm.dismissMissingFailures() }) { Text("Clear items") } },
+        dismissButton = { TextButton(onClick = { confirmMissingDismissal = false }) { Text("Keep reviewing") } }
+    )
 }
 @Composable
 private fun MediaRow(item: Media) {
@@ -358,7 +375,7 @@ private fun SettingsScreen(vm: BackupViewModel, pairing: Pairing?, busy: Boolean
         OutlinedButton(onClick = onPair, modifier = Modifier.fillMaxWidth(), enabled = !busy) { Text(if (pairing == null) "Pair Mac" else "Pair again or change Mac") }
         TextButton(onClick = onPermissions) { Text("Manage photo and network access") }
         Text("The Mac must be awake with the server running and the drive attached. Automatic work follows Android’s scheduling; open the app after a force-stop. Sync now starts a longer transfer session.", color = Muted, fontSize = 12.sp, lineHeight = 19.sp)
-        Text("Personal Backup 1.0 · Android → Mac", fontSize = 11.sp, color = Muted)
+        Text("Personal Backup 1.0.1 · Android → Mac", fontSize = 11.sp, color = Muted)
     }
 }
 @Composable
